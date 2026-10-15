@@ -1,0 +1,30 @@
+{
+	"expo": {
+		"name": "hero",
+		"slug": "hero",
+		"version": "1.0.0",
+		"orientation": "portrait",
+		"icon": "./assets/icon.png",
+		"userInterfaceStyle": "light",
+		"newArchEnabled": true,
+		"splash": {
+			"image": "./assets/splash-icon.png",
+			"resizeMode": "contain",
+			"backgroundColor": "#ffffff"
+		},
+		"ios": {
+			"supportsTablet": true
+		},
+
+		"plugins": ["expo-router"],
+		"scheme": "hero",
+		"android": {
+			"package": "com.pcmerida.hero",
+			"adaptiveIcon": {
+				"foregroundImage": "./assets/adaptive-icon.png",
+				"backgroundColor": "#ffffff"
+			},
+			"permissions": ["NOTIFICATIONS"]
+		}
+	}
+}

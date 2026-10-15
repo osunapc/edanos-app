@@ -1,0 +1,22 @@
+# robots.txt for EDANOS
+# Permite a todos los rastreadores acceder al sitio
+
+User-agent: *
+Allow: /
+
+# Bloquear archivos sensibles
+Disallow: /api/
+Disallow: /*.json$
+
+# Sitemap
+Sitemap: https://edanosapp.site/sitemap.xml
+
+# Rastreadores específicos
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# Configuración de rastreo
+Crawl-delay: 1

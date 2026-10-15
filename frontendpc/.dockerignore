@@ -1,0 +1,30 @@
+# Ignorar archivos de desarrollo
+node_modules
+npm-debug.log
+.env.local
+.env.development
+.env.test
+
+# Ignorar archivos de build
+dist
+
+# Ignorar archivos de Git
+.git
+.gitignore
+
+# Ignorar archivos de IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Ignorar archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Ignorar archivos de test
+coverage
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx

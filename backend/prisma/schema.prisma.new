@@ -1,0 +1,137 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             Int      @id @default(autoincrement())
+  email          String   @unique
+  nombre         String
+  apellido       String
+  contrasena     String
+  rol            String   @default("user")
+  cargo          String
+  cedula         String  @unique
+  telefono       String  @unique
+  ubicacion      String
+  codigo         String?
+  createdAt      DateTime @default(now())
+  evaluacion     Evaluation?
+}
+
+model Evaluation {
+  id                          Int                @id @default(autoincrement())
+  userId                      Int?                @unique
+  user                        User?               @relation(fields: [userId], references: [id])
+  codigo                      String?
+  createdAt                   DateTime              @default(now())
+  updatedAt                   DateTime              @updatedAt
+  // Información preliminar
+  informacionPreliminar       String?
+  // Ubicación
+  estado                      String?
+  municipio                   String?
+  parroquia                   String?
+  cuadranteDePaz             String?
+  urbanizacion               String?
+  calle                      String?
+  casa                       String?
+  barrioSector              String?
+  vereda                     String?
+  apto                       String?
+  avenida                    String?
+  // Uso de la estructura
+  usoEstructura              String?
+  otrosUsoEstructura         String?
+  // Coordenadas
+  latitud                    String?
+  longitud                   String?
+  cota                       String?
+  este                       String?
+  norte                      String?
+  huso                       String?
+  // Evento
+  tipoEvento                 String?
+  horaEvento                 String?
+  // Jefe de calle
+  apellidosJefe              String?
+  nombresJefe                String?
+  telefonoJefe               String?
+  // Condición de vivienda
+  condicionVivienda          String?
+  otrosCondicionVivienda     String?
+  // Vías de acceso
+  viasAcceso                 String[]
+  otrosViasAcceso            String?
+  condicionAcceso            String?
+  otrosCondicionAcceso       String?
+  // Jefe de familia
+  jefeFamilia               String?
+  edadJefe                  String?
+  sexoJefe                  String?
+  cedulaJefe                String?
+  tallaC                    String?
+  tallaP                    String?
+  tallaZ                    String?
+  telefonoJefeFamilia       String?
+  patologiasJefe            String?
+  // Familia desalojada
+  viviendaSolidaria         Boolean                @default(false)
+  albergue                  Boolean                @default(false)
+  telefonoContactoAlbergue  String?
+  direccionAlbergue         String?
+  nombreResponsableAlbergue String?
+  cedulaResponsableAlbergue String?
+  // Evaluación estructural
+  materialesConstruccion    String[]
+  otrosMaterialesConstruccion String?
+  // Afectaciones
+  afectacionesNoEstructurales String[]
+  otrosNoEstructurales      String?
+  afectacionesEstructuralesColapso String[]
+  otrosEstructuralesColapso String?
+  afectacionesParciales    String[]
+  otrosAfectacionesParciales String?
+  // Pérdidas de enseres
+  perdidasEnseres          String[]
+  otrosPerdidasEnseres     String?
+  // Líneas vitales afectadas
+  lineasVitalesAfectadas   String[]
+  otrosLineasVitalesAfectadas String?
+  // Observaciones
+  observaciones            String?
+  // Datos del evaluado
+  nombreEvaluado           String?
+  cedulaEvaluado          String?
+  telefonoEvaluado        String?
+  // Datos del evaluador
+  nombreEvaluador         String?
+  cedulaEvaluador         String?
+  telefonoEvaluador       String?
+  // Firmas (stored as base64 strings)
+  firmaEvaluado           String?
+  firmaEvaluador          String?
+  // Relaciones
+  grupoFamiliar           GrupoFamiliar[]
+}
+
+model GrupoFamiliar {
+  id               String     @id @default(cuid())
+  //iDE              Int        @default(0)
+  evaluacion       Evaluation @relation(fields: [evaluacionId], references: [id], onDelete: Cascade)
+  evaluacionId     Int      @unique
+  apellidosNombres String?
+  cedula           String?
+  edad             String?
+  sexo             String?
+  parentesco       String?
+  tallaC           String?
+  tallaP           String?
+  tallaZ           String?
+  patologias       String?
+}

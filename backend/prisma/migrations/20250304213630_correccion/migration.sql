@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "User" ALTER COLUMN "cedula" SET DATA TYPE TEXT,
+ALTER COLUMN "telefono" SET DATA TYPE TEXT;

@@ -1,0 +1,300 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             Int      @id @default(autoincrement())
+  email          String   @unique
+  nombre         String
+  apellido       String
+  contrasena     String
+  rol            String   @default("user")
+  cargo          String
+  cedula         String  @unique
+  telefono       String  @unique
+  ubicacion      String
+  codigo         String?
+  tipoInstitucion String? // "Protección Civil", "Bomberos", etc.
+  
+  // Campos para jerarquía de cuentas
+  nivelCuenta    String   @default("municipal") // "estadal" | "municipal"
+  codigoEstadal  String?  // Para municipales: código del estado padre
+  cuentaEstadalId Int?    // Relación opcional con cuenta estadal
+  
+  createdAt      DateTime @default(now())
+  evaluaciones   Evaluation[]
+  
+  // Relaciones jerárquicas
+  cuentaEstadal       User?  @relation("CuentasHijas", fields: [cuentaEstadalId], references: [id], onDelete: SetNull)
+  cuentasMunicipales  User[] @relation("CuentasHijas")
+  
+  // Relaciones con solicitudes de registro
+  solicitudesRevisadas  RegistrationRequest[] @relation("ReviewedBy")
+  solicitudOrigen       RegistrationRequest?  @relation("UsuarioCreado")
+  
+  // ⭐ NUEVAS RELACIONES: Gestión de Eventos
+  eventosCreados    Evento[]      @relation("EventosCreados")
+  eventosCerrados   Evento[]      @relation("EventosCerrados")
+  eventoAsignaciones EventoUsuario[]
+}
+
+model SatosReport {
+  id          Int      @id @default(autoincrement())
+  lat         Float
+  lng         Float
+  comment     String?
+  level       Int      // 1-5 (1=Precaución, 5=Emergencia Crítica)
+  emergency   Boolean  @default(false)
+  photoUrl    String   // URL de la foto en MinIO
+  isClosed    Boolean  @default(false)
+  validated   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([createdAt])
+  @@index([emergency])
+  @@index([isClosed])
+}
+
+model Funcionario {
+  id        Int      @id @default(autoincrement())
+  nombre    String
+  email     String   @unique
+  password  String   // Hash bcrypt
+  activo    Boolean  @default(false) // Si está activo, está de guardia y recibe alertas
+  socketId  String?  @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([activo])
+}
+
+model Evaluation {
+  id                          Int                @id @default(autoincrement())
+  userId                      Int
+  user                        User               @relation(fields: [userId], references: [id])
+  codigo                      String?  // DEPRECATED: solo para datos históricos
+  
+  // ⭐ NUEVO: Relación con Evento
+  eventoId                    Int?
+  evento                      Evento?            @relation(fields: [eventoId], references: [id])
+  
+  // ⭐ NUEVO: Snapshot de institución del evaluador
+  tipoInstitucion             String?
+  
+  createdAt                   DateTime              @default(now())
+  updatedAt                   DateTime              @updatedAt
+  // Información preliminar
+  informacionPreliminar       String?
+  // Ubicación
+  estado                      String?
+  municipio                   String?
+  parroquia                   String?
+  cuadranteDePaz             String?
+  urbanizacion               String?
+  calle                      String?
+  casa                       String?
+  barrioSector              String?
+  vereda                     String?
+  apto                       String?
+  avenida                    String?
+  // Uso de la estructura
+  usoEstructura              String?
+  otrosUsoEstructura         String?
+  // Coordenadas
+  latitud                    String?
+  longitud                   String?
+  cota                       String?
+  este                       String?
+  norte                      String?
+  huso                       String?
+  // Evento
+  tipoEvento                 String?
+  horaEvento                 String?
+  // Jefe de calle
+  apellidosJefe              String?
+  nombresJefe                String?
+  telefonoJefe               String?
+  // Condición de vivienda
+  condicionVivienda          String?
+  otrosCondicionVivienda     String?
+  // Vías de acceso
+  viasAcceso                 String[]
+  otrosViasAcceso            String?
+  condicionAcceso            String?
+  otrosCondicionAcceso       String?
+  // Jefe de familia
+  jefeFamilia               String?
+  edadJefe                  String?
+  sexoJefe                  String?
+  cedulaJefe                String?
+  tallaC                    String?
+  tallaP                    String?
+  tallaZ                    String?
+  telefonoJefeFamilia       String?
+  patologiasJefe            String?
+  // Familia desalojada
+  viviendaSolidaria         Boolean                @default(false)
+  albergue                  Boolean                @default(false)
+  telefonoContactoAlbergue  String?
+  direccionAlbergue         String?
+  nombreResponsableAlbergue String?
+  cedulaResponsableAlbergue String?
+  // Evaluación estructural
+  materialesConstruccion    String[]
+  otrosMaterialesConstruccion String?
+  // Afectaciones
+  afectacionesNoEstructurales String[]
+  otrosNoEstructurales      String?
+  afectacionesEstructuralesColapso String[]
+  otrosEstructuralesColapso String?
+  afectacionesParciales    String[]
+  otrosAfectacionesParciales String?
+  // Pérdidas de enseres
+  perdidasEnseres          String[]
+  otrosPerdidasEnseres     String?
+  // Líneas vitales afectadas
+  lineasVitalesAfectadas   String[]
+  otrosLineasVitalesAfectadas String?
+  // Observaciones
+  observaciones            String?
+  // Datos del evaluado
+  nombreEvaluado           String?
+  cedulaEvaluado          String?
+  telefonoEvaluado        String?
+  // Datos del evaluador
+  nombreEvaluador         String?
+  cedulaEvaluador         String?
+  telefonoEvaluador       String?
+  // Firmas (stored as base64 strings)
+  firmaEvaluado           String?
+  firmaEvaluador          String?
+
+  fotoFamiliar            String? // URL para la foto del grupo familiar
+  fotosAdicionales        String[] // Array de URLs para otras fotos
+
+  // Relaciones
+  grupoFamiliar           GrupoFamiliar[]
+  
+  @@index([eventoId])
+  @@index([estado, municipio])
+}
+
+model GrupoFamiliar {
+  id               String     @id @default(cuid())
+  //iDE              Int        @default(0)
+  evaluacion       Evaluation @relation(fields: [evaluacionId], references: [id], onDelete: Cascade)
+  evaluacionId     Int
+  apellidosNombres String?
+  cedula           String?
+  edad             String?
+  sexo             String?
+  parentesco       String?
+  tallaC           String?
+  tallaP           String?
+  tallaZ           String?
+  patologias       String?
+}
+
+// ============================================
+// ⭐ NUEVO MODELO: Evento
+// ============================================
+model Evento {
+  id                Int           @id @default(autoincrement())
+  
+  // Información básica
+  nombre            String        // "Inundación Mérida 2025-01-15"
+  descripcion       String?       @db.Text
+  tipoEvento        String        // "Inundación", "Deslizamiento", "Incendio", etc.
+  codigo            String        @unique  // Código único del evento (ej: "MER-001")
+  
+  // Ubicación
+  estado            String
+  municipios        String[]      // Array de municipios afectados
+  tipoInstitucion   String?       // "Protección Civil", "Bomberos", etc.
+  
+  // Estado del evento
+  estadoEvento      String        @default("activo") // "activo" | "cerrado" | "archivado"
+  
+  // Fechas
+  fechaInicio       DateTime      @default(now())
+  fechaCierre       DateTime?
+  fechaArchivado    DateTime?
+  
+  // Auditoría
+  creadoPor         Int
+  creador           User          @relation("EventosCreados", fields: [creadoPor], references: [id])
+  cerradoPor        Int?
+  usuarioCierre     User?         @relation("EventosCerrados", fields: [cerradoPor], references: [id])
+  
+  // Relaciones
+  evaluaciones      Evaluation[]
+  asignaciones      EventoUsuario[]  // ⭐ NUEVO: Evaluadores asignados
+  
+  // Timestamps
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  
+  @@index([estadoEvento])
+  @@index([estado])
+  @@index([fechaInicio])
+}
+
+// ============================================
+// ⭐ NUEVO MODELO: Asignación Evaluador-Evento
+// ============================================
+model EventoUsuario {
+  id        Int      @id @default(autoincrement())
+  eventoId  Int
+  userId    Int
+  evento    Evento   @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  
+  @@unique([eventoId, userId])
+  @@index([eventoId])
+  @@index([userId])
+}
+
+model RegistrationRequest {
+  id                String    @id @default(cuid())
+  // Datos de la institución
+  nombreInstitucion String
+  tipoInstitucion   String    // "Protección Civil", "Bomberos", "Grupo de Rescate"
+  estado            String
+  municipio         String?   // Opcional: null para cuentas estadales
+  codigo            String    // ESTADO para estadales, ESTADO-MUNICIPIO para municipales
+  
+  // Campos para jerarquía de cuentas
+  nivelCuenta       String    @default("municipal") // "estadal" | "municipal"
+  codigoEstadal     String?   // Para municipales: código del estado
+  
+  // Datos del responsable
+  nombreResponsable String
+  cargo             String
+  cedula            String    @unique
+  email             String    @unique
+  telefono          String
+  
+  // Documento formal
+  cartaFormalUrl    String    // URL del PDF en S3
+  
+  // Estado de la solicitud
+  estadoSolicitud   String    @default("pending") // pending, approved, rejected
+  motivoRechazo     String?
+  
+  // Auditoría
+  createdAt         DateTime  @default(now())
+  reviewedAt        DateTime?
+  reviewedBy        Int?
+  reviewedByUser    User?     @relation("ReviewedBy", fields: [reviewedBy], references: [id])
+  
+  // Relación con usuario creado
+  usuarioCreadoId   Int?      @unique
+  usuarioCreado     User?     @relation("UsuarioCreado", fields: [usuarioCreadoId], references: [id])
+}
